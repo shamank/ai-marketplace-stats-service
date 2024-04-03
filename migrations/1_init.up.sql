@@ -1,7 +1,7 @@
-create table services
+create table aiservices
 (
     uid           uuid primary key default gen_random_uuid(),
-    name          varchar unique not null,
+    title         varchar unique not null,
     description   text,
     current_price integer        not null
 );
@@ -13,11 +13,11 @@ create table users
     username varchar unique not null
 );
 
-create table stats
+create table statistics
 (
     uid         uuid primary key default gen_random_uuid(),
     user_uid    uuid references users (uid)    not null,
-    service_uid uuid references services (uid) not null,
+    aiservice_uid uuid references aiservices (uid) not null,
     amount      integer                        not null,
     created_at  timestamp        default now()
 );
