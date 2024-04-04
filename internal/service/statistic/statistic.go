@@ -2,14 +2,14 @@ package statistic
 
 import (
 	"context"
-	"fmt"
 	"github.com/shamank/ai-marketplace-stats-service/internal/domain/models"
 	"log/slog"
 )
 
 type StatisticRepository interface {
-	GetStats(ctx context.Context, filter models.StatisticFilter) ([]models.StatisticRead, error)
-	SetStat(ctx context.Context, userUID string, serviceUID string) (string, error)
+	CreateService(ctx context.Context, input models.AIServiceCreate) (string, error)
+	GetCalls(ctx context.Context, filter models.StatisticFilter) ([]models.StatisticRead, error)
+	Call(ctx context.Context, statsWrite models.StatisticWrite) error
 }
 
 type StatisticService struct {
@@ -24,21 +24,24 @@ func NewStatisticService(log *slog.Logger, repo StatisticRepository) *StatisticS
 	}
 }
 
-func (s *StatisticService) GetStats(ctx context.Context, filter models.StatisticFilter) ([]models.StatisticRead, error) {
+func (s *StatisticService) CreateService(ctx context.Context, input models.AIServiceCreate) (string, error) {
 
-	stats, err := s.repo.GetStats(ctx, filter)
+	return s.repo.CreateService(ctx, input)
+}
+
+func (s *StatisticService) GetCalls(ctx context.Context, filter models.StatisticFilter) ([]models.StatisticRead, error) {
+	stats, err := s.repo.GetCalls(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 	return stats, nil
 }
 
-func (s *StatisticService) SetStat(ctx context.Context, userUID string, serviceUID string) (string, error) {
-
-	uid, err := s.repo.SetStat(ctx, userUID, serviceUID)
-	if err != nil {
-		fmt.Println(err)
-		return "", err
+func (s *StatisticService) Call(ctx context.Context, userUID string, serviceUID string) error {
+	statsWrite := models.StatisticWrite{
+		UserUID:      userUID,
+		AIServiceUID: serviceUID,
 	}
-	return uid, nil
+
+	return s.repo.Call(ctx, statsWrite)
 }

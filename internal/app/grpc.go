@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	aiservice "github.com/shamank/ai-marketplace-stats-service/internal/delivery/grpc/ai-service"
 	"github.com/shamank/ai-marketplace-stats-service/internal/delivery/grpc/statistic"
 	"github.com/shamank/ai-marketplace-stats-service/internal/service"
 	"google.golang.org/grpc"
@@ -21,7 +20,6 @@ func NewGRPCServer(log *slog.Logger, services *service.Service, port int) *GRPCS
 	gRPCServer := grpc.NewServer()
 
 	statistic.RegisterServerAPI(gRPCServer, services.StatisticService)
-	aiservice.RegisterServerAPI(gRPCServer, services.AIService)
 
 	return &GRPCServer{
 		log:  log,

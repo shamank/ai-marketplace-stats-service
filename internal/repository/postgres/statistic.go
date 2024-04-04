@@ -20,9 +20,20 @@ func NewStatisticRepository(db *pgx.Conn) *StatisticRepository {
 	}
 }
 
-func (r *StatisticRepository) GetStats(ctx context.Context, filter models.StatisticFilter) ([]models.StatisticRead, error) {
+func (r *StatisticRepository) CreateService(ctx context.Context, service models.AIServiceCreate) (string, error) {
+	query := "insert into aiservices(title, description, price) VALUES ($1, $2, $3) returning uid"
 
-	query := "select s.user_uid, s.aiservice_uid, count(s.aiservice_uid), sum(s.amount) from stats s where true"
+	var serviceUID string
+
+	if err := r.db.QueryRow(ctx, query, service.Title, service.Description, service.Price).Scan(&serviceUID); err != nil {
+		return "", err
+	}
+	return serviceUID, nil
+}
+
+func (r *StatisticRepository) GetCalls(ctx context.Context, filter models.StatisticFilter) ([]models.StatisticRead, error) {
+
+	query := "select s.user_uid, s.aiservice_uid, count(s.aiservice_uid), sum(s.amount) from statistics s where true"
 
 	values := []interface{}{}
 	argNumber := 0
@@ -56,7 +67,8 @@ func (r *StatisticRepository) GetStats(ctx context.Context, filter models.Statis
 
 		if filter.PageNumber != nil {
 			argNumber++
-			values = append(values, *filter.PageNumber)
+			offset := (*filter.PageNumber - 1) * (*filter.PageSize)
+			values = append(values, offset)
 			query += fmt.Sprintf(" offset $%d ", argNumber)
 		}
 	}
@@ -81,28 +93,28 @@ func (r *StatisticRepository) GetStats(ctx context.Context, filter models.Statis
 	return result, nil
 }
 
-func (r *StatisticRepository) SetStat(ctx context.Context, userUID string, serviceUID string) (string, error) {
+func (r *StatisticRepository) Call(ctx context.Context, statsWrite models.StatisticWrite) error {
 
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
 
-		return "", err
+		return err
 	}
 
-	var amount int
+	var price float64
 
-	if err := tx.QueryRow(ctx, "select current_price from aiservices where uid = $1", serviceUID).Scan(&amount); err != nil {
-		return "", err
+	if err := tx.QueryRow(ctx, "select price from aiservices where uid = $1", statsWrite.AIServiceUID).Scan(&price); err != nil {
+		return err
 	}
 
-	query := "insert into stats(user_uid, aiservice_uid, amount) VALUES ($1, $2, $3) returning uid"
+	query := "insert into statistics(user_uid, aiservice_uid, amount) VALUES ($1, $2, $3) returning uid"
 
 	var statUID string
 
-	if err := tx.QueryRow(ctx, query, userUID, serviceUID, amount).Scan(&statUID); err != nil {
+	if err := tx.QueryRow(ctx, query, statsWrite.UserUID, statsWrite.AIServiceUID, price).Scan(&statUID); err != nil {
 		fmt.Println(err)
-		return "", err
+		return err
 	}
 
-	return statUID, tx.Commit(ctx)
+	return tx.Commit(ctx)
 }

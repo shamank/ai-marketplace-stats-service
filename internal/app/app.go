@@ -11,6 +11,7 @@ import (
 	"log/slog"
 )
 
+// App - структура приложения
 type App struct {
 	cfg        *config.Config
 	log        *slog.Logger
@@ -19,8 +20,6 @@ type App struct {
 
 func NewApp(cfg *config.Config) *App {
 	log := logger.InitLogger()
-
-	fmt.Printf("config: %+v\n", cfg)
 
 	dbURL := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=%s",
 		cfg.Postgres.User,
@@ -35,7 +34,7 @@ func NewApp(cfg *config.Config) *App {
 	if err != nil {
 
 		log.Error("failed to connect to database", err)
-		return nil
+		panic(err)
 	}
 
 	repos := repository.NewRepositories(conn)
@@ -66,5 +65,6 @@ func (a *App) Run() error {
 func (a *App) Stop() {
 
 	a.log.Info("Stopping application")
+
 	a.gRPCServer.Stop()
 }

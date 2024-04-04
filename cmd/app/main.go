@@ -2,14 +2,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/shamank/ai-marketplace-stats-service/internal/app"
 	"github.com/shamank/ai-marketplace-stats-service/internal/config"
 	"os"
 	"os/signal"
 	"syscall"
 )
-
-const defaultConfigPath = "./configs/prod.yaml"
 
 func main() {
 
@@ -18,12 +18,8 @@ func main() {
 	flag.StringVar(&cfgPath, "cfg", "", "path to config file")
 	flag.Parse()
 
-	if cfgPath == "" {
-		if cfgPathEnv := os.Getenv("CONFIG_PATH"); cfgPathEnv != "" {
-			cfgPath = cfgPathEnv
-		} else {
-			cfgPath = defaultConfigPath
-		}
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("error occured while loading .env file, error: ", err) // нам не обязательно падать с ошибкой
 	}
 
 	cfg, err := config.LoadConfig(cfgPath)
@@ -33,7 +29,7 @@ func main() {
 
 	application := app.NewApp(cfg)
 
-	quit := make(chan os.Signal, 1)
+	quit := make(chan os.Signal, 1) // канал для реализации graceful shutdown
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 
 	go func() {

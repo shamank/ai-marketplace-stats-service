@@ -6,7 +6,7 @@ type Statistic struct {
 	UID          string
 	UserUID      string
 	AIServiceUID string
-	Amount       int
+	Amount       float64
 	CreatedAt    time.Time
 }
 
@@ -22,10 +22,10 @@ type StatisticRead struct {
 	UserUID      string
 	AIServiceUID string
 	Count        uint32
-	FullAmount   uint32
+	FullAmount   float64
 }
 
-type StatisticSet struct {
+type StatisticWrite struct {
 	UserUID      string
 	AIServiceUID string
 }

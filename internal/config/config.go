@@ -1,23 +1,21 @@
 package config
 
 import (
-	"errors"
 	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/joho/godotenv"
 	"os"
 	"time"
 )
 
-const defaultConfigPath = "./configs/prod.yaml"
-
-var ErrNoConfig = errors.New("config file not found")
+const defaultConfigPath = "./configs/prod.yaml" // Дефолтная папка конфигурации
 
 type (
+	//Конфигурация GRPC-сервера
 	GRPCConfig struct {
 		Port    int           `yaml:"port"`
 		Timeout time.Duration `yaml:"timeout"`
 	}
 
+	//Конфигурация PostgresSQL
 	PostgresConfig struct {
 		Host     string `yaml:"host"`
 		Port     int    `yaml:"port"`
@@ -33,13 +31,8 @@ type (
 	}
 )
 
+// LoadConfig - загрузка конфигурации из файла
 func LoadConfig(configPath string) (*Config, error) {
-
-	// Почему-то без этого вызова не работает, хотя раньше cleanvenv вроде сам справлялся  :(
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
 
 	if configPath == "" {
 		if configPathEnv := os.Getenv("CONFIG_PATH"); configPathEnv != "" {
